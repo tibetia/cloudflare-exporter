@@ -23,23 +23,28 @@ docker run \
  -e ZONE=example.com \
  -e AUTH_KEY=deadbeefcafe \
  -e AUTH_EMAIL=admin@example.com \
- wehkamp/prometheus-cloudflare-exporter:1.0
+vaheminasyan/cloudflare-exorter:0.5.1
 ```
 
 ### Metrics
 The exporter exposes the following metrics, all returned per PoP:
 
-| Name                                 | Description                                               |  Type |
-|:-------------------------------------|:----------------------------------------------------------|:-----:|
-| `cloudflare_pop_received_requests`   | cached and uncached requests received on an edge-location | gauge |
-| `cloudflare_pop_bandwidth_bytes`     | cached and uncached bandwidth sent from an edge-location  | gauge |
-| `cloudflare_pop_http_responses_sent` | breakdown of requests per HTTP code                       | gauge |
-| `cloudflare_pop_threats_seen`        | number of threats identified received in at this location | gauge |
-| `cloudflare_pop_threat_types`        | types of threats seen                                     | gauge |
-| `cloudflare_pop_threat_countries`    | countries causing threats                                 | gauge |
-| `cloudflare_dns_record_queries`      | DNS record queries per edge-location                      | gauge |
-| `cloudflare_waf_uri_hits`            | WAF-rule hits at PoP location per uri                     | gauge |
-| `cloudflare_waf_rules`               | WAF-rules in the system and a hit count                   | gauge |
+
+| Name                                              | Description                                             |  Type |
+|:--------------------------------------------------|:--------------------------------------------------------|:-----:|
+| `bandwidth_byte_per_country`                      | cached/uncached bandwidth used per country              | gauge |
+| `bandwidth_bytes_all_countries`                   | cached/uncached bandwidth used from all countries       | gauge |
+| `cloudflare_exporter_processing_time_miliseconds` | exporter processing time                                | gauge |
+| `cloudflare_pop_bandwidth_bytes`                  | cached/uncached bandwidth sent from an edge-location    | gauge |
+| `cloudflare_pop_http_responses_sent`              | breakdown of requests per HTTP code                     | gauge |
+| `cloudflare_pop_received_requests`                | cached/uncached requests received on an edge-location   | gauge |
+| `cloudflare_pop_threats_seen`                     | number of threats identified per location               | gauge |
+| `cloudflare_pop_threats_seen_by_country`          | countries causing threats                               | gauge |
+| `http_responses_sent_all_countries`               | sent http responses sent to all countries               | gauge |
+| `received_requests_all_countries`                 | received requests from all countries                    | gauge |
+
+
+
 
 Random scrape result:
 
@@ -76,9 +81,6 @@ cloudflare_waf_rules{rule_id="unknown",rule_message="internal"} 9.0
 cloudflare_waf_uri_hits{action="block",attacking_country="T1",colo_id="OSL",host="www.example.com",method="GET",protocol="HTTP/1.1",rule_id="unknown",uri="/"} 9.0
 ```
 
-### WAF Analytics
-
-Cloudflare consideres the WAF analytics API _experimental_. The exporter currently supports dropping incoming *T1* traffic (attacks) from the metrics, this can be enabled by setting the following in your environment: `SCRAPER_SKIP_T1=true`
 
 
 ### Dashboard
