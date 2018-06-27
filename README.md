@@ -27,7 +27,7 @@ vaheminasyan/cloudflare-exorter:0.5.1
 ```
 
 ### Metrics
-The exporter exposes the following metrics, all returned per PoP:
+The exporter exposes the following metrics, all returned per PoP, or per country:
 
 
 | Name                                              | Description                                             |  Type |
@@ -42,7 +42,7 @@ The exporter exposes the following metrics, all returned per PoP:
 | `cloudflare_pop_threats_seen_by_country`          | countries causing threats                               | gauge |
 | `http_responses_sent_all_countries`               | sent http responses sent to all countries               | gauge |
 | `received_requests_all_countries`                 | received requests from all countries                    | gauge |
-
+| `received_requests_by_country`                    | received requests breakdown by country                  | gauge |
 
 
 
