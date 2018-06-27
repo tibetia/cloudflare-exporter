@@ -19,7 +19,7 @@ Running the container:
 ```
 docker run \
  -d \
- -p 9199:9199 \
+ -p 9199:9199 \                                                    
  -e ZONE=example.com \
  -e AUTH_KEY=deadbeefcafe \
  -e AUTH_EMAIL=admin@example.com \

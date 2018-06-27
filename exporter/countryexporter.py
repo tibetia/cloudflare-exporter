@@ -56,9 +56,10 @@ def process(raw_data, zone):  # raw_data is dict {"timeseries":[data here]}
             families['threat_countries'].add_metric(
                 [zone, country], count)
 
-
-
-
+        for country, count in serie['requests']['country'].iteritems():
+            families['received_requests_by_country'].add_metric(
+                [zone, country], count
+            )
 
     families = {
         'received_requests_all_countries': GaugeMetricFamily(
@@ -88,7 +89,11 @@ def process(raw_data, zone):  # raw_data is dict {"timeseries":[data here]}
         'threat_countries': GaugeMetricFamily(
             'threat_countries_by_country',
             'Threat breakdown per country by country.',
-            labels=['zone', 'threat_country'])
+            labels=['zone', 'threat_country']),
+        'received_requests_by_country': GaugeMetricFamily(
+            'received_requests_by_country',
+            'Requests breakdown per country.',
+            labels=['zone', 'country'])
     }
 
     generate_metrics(raw_data, families)
@@ -102,4 +107,4 @@ if __name__ == "__main__":
     path = os.path.join(source_dir, "sample")
 
     with open(path) as f:
-        print process(json.load(f)['result'])
+        print(process(json.load(f)['result']))
