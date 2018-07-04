@@ -43,6 +43,7 @@ The exporter exposes the following metrics, all returned per PoP, or per country
 | `http_responses_sent_all_countries`               | sent http responses sent to all countries               | gauge |
 | `received_requests_all_countries`                 | received requests from all countries                    | gauge |
 | `received_requests_by_country`                    | received requests breakdown by country                  | gauge |
+| `cloudflare_content_type_count`                   | Requests count breakdown by content-type                | gauge |
 
 
 

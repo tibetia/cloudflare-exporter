@@ -37,9 +37,15 @@ def process(raw_data, zone):  # raw_data is dict {"timeseries":[data here]}
             [zone, 'uncached'],
             serie['bandwidth']['uncached'])
 
-        for country, count in serie['bandwidth']['country'].iteritems():  # This piece is considered to expose bandwidth metrics for countries
+        # This piece is considered to expose bandwidth metrics for countries
+        for country, count in serie['bandwidth']['country'].iteritems():
             families['bandwidth_byte_per_country'].add_metric(
                 [zone, country], count)
+
+        # This piece is considered to expose bandwidth metrics for content-type
+        for content_type, content in serie['bandwidth']['content_type'].iteritems():
+            families['bandwidth_byte_per_content_type'].add_metric(
+                [zone, content_type], content)
 
         for http_status, count in serie['requests']['http_status'].iteritems():
             families['http_responses_sent_all_countries'].add_metric(
@@ -79,6 +85,10 @@ def process(raw_data, zone):  # raw_data is dict {"timeseries":[data here]}
             'bandwidth_byte_per_country',
             'Bandwidth used from specified country.',
             labels=['zone', 'bandwidth_country']),
+        'bandwidth_byte_per_content_type': GaugeMetricFamily(
+            'bandwidth_byte_per_content_type',
+            'Bandwidth breakdown by content-type.',
+            labels=['zone', 'content_type']),
         'http_responses_sent_all_countries': GaugeMetricFamily(
             'http_responses_sent_all_countries',
             'Breakdown per HTTP response code for all countries.',
