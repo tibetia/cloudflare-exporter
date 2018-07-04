@@ -61,6 +61,11 @@ def process(raw_data, zone):  # raw_data is dict {"timeseries":[data here]}
                 [zone, country], count
             )
 
+        for content_type, content in serie['requests']['content_type'].iteritems():
+            families['cloudflare_content_type_count'].add_metric(
+                [zone, content_type], content
+            )
+
     families = {
         'received_requests_all_countries': GaugeMetricFamily(
             'received_requests_all_countries',
@@ -93,7 +98,11 @@ def process(raw_data, zone):  # raw_data is dict {"timeseries":[data here]}
         'received_requests_by_country': GaugeMetricFamily(
             'received_requests_by_country',
             'Requests breakdown per country.',
-            labels=['zone', 'country'])
+            labels=['zone', 'country']),
+        'cloudflare_content_type_count': GaugeMetricFamily(
+            'cloudflare_content_type_count',
+            'Request count breakdown by content type.',
+            labels=['zone', 'content_type'])
     }
 
     generate_metrics(raw_data, families)
