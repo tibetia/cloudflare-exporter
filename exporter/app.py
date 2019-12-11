@@ -21,24 +21,26 @@ from . import coloexporter
 from . import dnsexporter
 from . import wafexporter
 from . import countryexporter
-from . import lbpoolexporter 
+from . import originquotaexporter 
+from . import lbquotaexporter 
 
 
 logging.basicConfig(level=logging.os.environ.get('LOG_LEVEL', 'INFO'))
 
 
-REQUIRED_VARS = {'AUTH_EMAIL', 'AUTH_KEY', 'SERVICE_PORT', 'ZONE'}
+#REQUIRED_VARS = {'AUTH_EMAIL', 'AUTH_KEY', 'SERVICE_PORT', 'ZONE'}
+REQUIRED_VARS = {'AUTH_EMAIL', 'AUTH_KEY', 'SERVICE_PORT'}
 for key in REQUIRED_VARS:
     if key not in os.environ:
         logging.error('Missing value for %s' % key)
         sys.exit()
 
 SERVICE_PORT = int(os.environ.get('SERVICE_PORT', 9199))
-ZONE = os.environ.get('ZONE')
+#ZONE = os.environ.get('ZONE')
 ENDPOINT = 'https://api.cloudflare.com/client/v4/'
 AUTH_EMAIL = os.environ.get('AUTH_EMAIL')
 AUTH_KEY = os.environ.get('AUTH_KEY')
-ACCOUNT = os.environ.get('ACCOUNT')
+ACCOUNT = 'NHN LB'
 HEADERS = {
     'X-Auth-Key': AUTH_KEY,
     'X-Auth-Email': AUTH_EMAIL,
@@ -60,14 +62,19 @@ def get_data_from_cf(url):
     r = HTTP_SESSION.get(url, headers=HEADERS)
     return json.loads(r.content.decode('UTF-8'))   #   [u'query', u'errors', u'messages', u'result', u'success']
 
-
+'''
 def get_zone_id():
     r = get_data_from_cf(url='%szones?name=%s' % (ENDPOINT, ZONE))
     return r['result'][0]['id']
+'''
+
+def get_zone_id(zone):
+    r = get_data_from_cf(url='%szones?name=%s' % (ENDPOINT, zone))
+    return r['result'][0]['id']
 
 
-def get_account_id():
-    r = get_data_from_cf(url='%saccounts?name=%s' % (ENDPOINT, ACCOUNT))
+def get_account_id(account):
+    r = get_data_from_cf(url='%saccounts?name=%s' % (ENDPOINT, account))
     return r['result'][0]['id']
 
 
@@ -101,6 +108,7 @@ def get_colo_metrics():
     query = r['query']
     logging.info('Window: %s | %s' % (query['since'], query['until']))
     return coloexporter.process(r['result'], ZONE)  # list and ZONE
+
 
 #################
 
@@ -215,9 +223,9 @@ def get_dns_metrics():
         return ''
     return dnsexporter.process(r['result']['data'], ZONE)
 
-
-def get_lb_pool_metrics():
-    logging.info('Fetching POOL metrics data')
+#@metric_processing_time('loadbalancer_origins')
+def get_lb_origin_quota(account):
+    logging.info('Fetching Origin quota data')
     time_since = (
                     datetime.datetime.now() + datetime.timedelta(minutes=-1)
                 ).strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -226,7 +234,7 @@ def get_lb_pool_metrics():
 
     logging.info('Using: since %s until %s' % (time_since, time_until))
     r = get_data_from_cf(url=endpoint % (
-            ENDPOINT, get_account_id()))
+            ENDPOINT, get_account_id(account)))
 
     if not r['success']:
         logging.error('Failed to get information from Cloudflare')
@@ -239,7 +247,35 @@ def get_lb_pool_metrics():
     logging.info('Records retrieved: %d' % records)
     if records < 1:
         return ''
-    return lbpoolexporter.process(r['result'], ZONE)
+    #return originquotaexporter.process(r['result'], ZONE)
+    return originquotaexporter.process(r['result'])
+
+
+#@metric_processing_time('loadbalancers')
+def get_lb_quota(zone):
+    logging.info('Fetching LB quota data')
+    time_since = (
+                    datetime.datetime.now() + datetime.timedelta(minutes=-1)
+                ).strftime("%Y-%m-%dT%H:%M:%SZ")
+    time_until = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%SZ")
+    endpoint = '%szones/%s/load_balancers'
+
+    logging.info('Using: since %s until %s' % (time_since, time_until))
+    r = get_data_from_cf(url=endpoint % (
+            ENDPOINT, get_zone_id(zone)))
+
+    if not r['success']:
+        logging.error('Failed to get information from Cloudflare')
+        for error in r['errors']:
+            logging.error('[%s] %s' % (error['code'], error['message']))
+            return ''
+
+    #records = int(r['result']['rows'])
+    records = len(r['result'])
+    logging.info('Records retrieved: %d' % records)
+    if records < 1:
+        return ''
+    return lbquotaexporter.process(r['result'], zone)
 
 
 def update_latest():
@@ -255,7 +291,9 @@ def update_latest():
     }
 
     #latest_metrics = (get_colo_metrics() + get_country_metrics() + get_dns_metrics())
-    latest_metrics = (get_lb_pool_metrics())
+    latest_metrics = (get_lb_origin_quota(ACCOUNT) + get_lb_quota('toastgslb.com')
+			+ get_lb_quota('tcgslb-alpha.toastmaker.net') 
+			+ get_lb_quota('tcgslb-beta.toastmaker.net'))
     latest_metrics += generate_latest(RegistryMock(internal_metrics.values()))
 
 
@@ -281,8 +319,10 @@ def metrics():
 
 
 def run():
-    logging.info('Starting scrape service for zone "%s" using key [%s...]'
-                 % (ZONE, AUTH_KEY[0:6]))
+    #logging.info('Starting scrape service for zone "%s" using key [%s...]'
+    #             % (ZONE, AUTH_KEY[0:6]))
+    logging.info('Starting scrape service using key [%s...]'
+                 % (AUTH_KEY[0:6]))
 
     update_latest()
 

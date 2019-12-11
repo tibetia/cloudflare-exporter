@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Cloudflare exporter for Prometheus
 
 A very simple Prometheus exporter that exposes metrics from Cloudflare's colocations API as described in the [API documentation](https://api.cloudflare.com/#zone-analytics-analytics-by-co-locations). Sadly, this is for Cloudflare Enterprise customers only.
@@ -100,3 +101,8 @@ Overview of actual countries that cause threats:
 ### Todo
 
 - [ ] Implement a way to store datapoints in Prometheus using timestamps received from Cloudflare. This should remove the delay as we currently have it.
+=======
+# cloudflare-exporter
+
+cloudflare-exporter
+>>>>>>> 56685826bfff7c9cca15a6d02d2832678b7671ba
